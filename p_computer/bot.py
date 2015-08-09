@@ -3,7 +3,7 @@
 import random
 import logging
 
-def get_play(me, hands, history):
+def play(me, hands, history):
     # figure out the previous call
     #
     if 0 == len(history):

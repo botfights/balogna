@@ -4,7 +4,7 @@
 # write a robot, or look at computer.py for
 # an example.
 
-def get_play(me,hands,history) :
+def play(me,hands,history) :
     # TODO: write your player here
     return 0
 

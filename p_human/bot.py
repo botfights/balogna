@@ -2,7 +2,7 @@
 
 import logging
 
-def get_play(me,hands,history) : 
+def play(me,hands,history) : 
     ''' play against the computer '''
     logging.info('You are player "%s" | Hands: %s | History: %s' % (me,hands,history))
     if 0 != len(history) :

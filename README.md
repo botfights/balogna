@@ -20,10 +20,10 @@ remains.
 
 In this variation there are no wild dice, and no re-casting of dice.
 
-You can write a robot by implementing the get\_play() function in 
-p\_robot/player.py:
+You can write a robot by implementing the play() function in 
+p\_robot/bot.py:
 
-    def get_play(me,hands,history) 
+    def play(me,hands,history) 
 
         me is the id of your player. eg, "A"
 
@@ -50,7 +50,7 @@ p\_robot/player.py:
         encoding the call, like, 23 for two threes,
         105 for 10 fives, or 0 for "liar".
 
-Your get\_play() function will be called when it is your turn,
+Your play() function will be called when it is your turn,
 and at the end of the hand (in which case the most recent play
 will be a call) so you can observe the showdown.
 
@@ -60,10 +60,10 @@ For a quick start to play against the computer:
     $ cd liarsdice
     $ python main.py play p_human p_computer
 
-Next, edit p\_robot/player.py, implement get\_play(), then play your
+Next, edit p\_robot/bot.py, implement play(), then play your
 robot against the computer 100 times:
 
-    $ python main.py tournament 100 p_robot p_computer
+    $ python main.py tournament --num-games=100 p_robot p_computer
 
 Have fun!
 
