@@ -13,15 +13,146 @@ from signal import (signal, SIGPIPE, SIG_DFL)
 signal(SIGPIPE, SIG_DFL)
 
 
-class Player:
-    pass
+RANKS = '23456789TJQKA'
 
 
 def play_game(players):
+
+    # to start, everyone is in the game
+    #
+    players_in_game = {}
     for i in players:
-        x = i.get_play(1, '234K', 3, 4, 5)
-        logging.info('%s played %s' % (i.player_id, str(x)))
-    return random.choice(players)
+        players_in_game[i.player_id] = i
+
+    # keep playing until there's only 1 player left
+    #
+    while 1 < len(players_in_game):
+
+        # build and shuffle the decks
+        #
+        num_decks = (len(players_in_game) // 4) + 1
+        deck = []
+        for i in range(num_decks) * 4:
+            for rank in RANKS:
+                deck.append(rank)
+        random.shuffle(deck)
+
+        # deal cards
+        #
+        i = 0
+        cards_per_player = len(deck) // len(players_in_game)
+        for player in players_in_game.values():
+            player.hand = deck[i:i + cards_per_player]
+            player.hand.sort()
+            i += cards_per_player
+
+        # keep playing until one player left
+        #
+        players_in_hand = players_in_game.values()
+        random.shuffle(players_in_hand)
+
+        # start at '2'
+        #
+        on_rank = 0
+        whosemove = 0
+        last_play_was_bullshit = False
+        last_player = None
+        pile = []
+        history = ''
+        while 1:
+
+            # get the play from current player
+            #
+            players_hands = []
+            for i in players_in_hand:
+                players_hands.append((i.player_id, len(i.hand)))
+            print str(players_hands)
+            p = players_in_hand[whosemove]
+            play = p.get_play(p.player_id, RANKS[on_rank], p.hand, players_hands, history)
+            if None == play:
+                play = ''
+            play = str(play)
+
+            # is it legal? if not, just call bullshit
+            #
+            played_bullshit = False
+            hand_counts = {}
+            for i in players[whosemove].hand:
+                if not hand_counts.has_key(i):
+                    hand_counts[i] = 0
+                hand_counts[i] += 1
+            play_counts = {}
+            for i in play:
+                if not play_counts.has_key(i):
+                    play_counts[i] = 0
+                play_counts[i] += 1
+            play_is_bullshit = False
+            for rank, count in play_counts.items():
+                if hand_counts.get(rank, 0) < count:
+                    played_bullshit = True
+                if rank != on_rank:
+                    play_is_bullshit = True
+
+            # bullshit call? let's check
+            #
+            if played_bullshit:
+                logging.info('player called bullshit')
+                if last_play_was_bullshit:
+                    logging.info('previous play was bullshit, plast player takes pile')
+                    last_player.hand.extend(pile)
+                    pile = []
+                else:
+                    logging.info('previous play wasn\'t bullshit, player takes pile')
+                    players[whosemove].hand.extend(pile)
+                    pile = []
+                last_play_was_bullshit = False
+
+            # otherwise, take the cards out of their hand
+            #
+            else:
+
+                # remember if this is bullshit
+                #
+                last_player = players[whosemove]
+                last_play_was_bullshit = play_is_bullshit
+                for i in play:
+                    pile.append(i)
+
+            # advance rank
+            #
+            on_rank = (on_rank + 1) % 13
+
+            # advance whosemove
+            last_whosemove = whosemove
+            while 1:
+                whosemove = (whosemove + 1) % len(players_in_hand)
+                if 0 != len(players[whosemove].hand):
+                    break
+
+            # if only one player has any cards left, they lost
+            #
+            if whosemove == last_whosemove:
+                logging.info('end of hand, player %s lost' % players[whosemove].playername)
+                break
+
+            # nope, more players in hand, keep playing
+            #
+            continue
+
+        # last player left is the loser, kick him out
+        #
+        loser = players_in_hand[0]
+        del players_in_game[loser.player_id]
+
+        # all done with hand. keep playing until there is only
+        # one player
+        #
+        continue
+
+    # last player left is the winner
+    #
+    logging.info('end of game, player %s wins' % players_in_game.values()[0])
+    return players_in_game.values()[0]
 
 
 def play_tournament(games, players):
