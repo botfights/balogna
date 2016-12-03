@@ -1,9 +1,10 @@
-# computer.py -- sample liar's dice robot
+# computer.py -- sample balogna bot
 
 import random
 import logging
 
 def play(me, hands, history):
+
     # figure out the previous call
     #
     if 0 == len(history):
@@ -16,11 +17,11 @@ def play(me, hands, history):
     #
     if 0 == prev_quantity and len(history) > 0:
         return 0
-    
+
     # count the total number of dice
     #
     num_dice = sum(map(lambda x : len(x.split(':')[1]),hands.split(',')))
- 
+
     # find my hand
     #
     my_hand = None
@@ -57,7 +58,7 @@ def play(me, hands, history):
             return (quantity * 10) + face
 
     # nothing found, just call
-    # 
+    #
     logging.debug('nothing found, calling ...')
     return 0
 

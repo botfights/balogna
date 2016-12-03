@@ -1,15 +1,15 @@
-# liarsdice.py -- the liar's dice logic functions, you can import this in your robots
+# balogna.py -- the balogna test harness
 
 HELP = '''\
 usage:
 
     To play a game against the computer:
 
-        $ python main.py play p_human p_computer
+        $ python balogna.py play p_human p_computer
 
-    To play a 10 game tourney between p_robot and p_computer and p_dummy: 
+    To play a 10 game tourney between p_robot and p_computer and p_dummy:
 
-        $ python main.py tournament 10 p_robot p_human p_dummy
+        $ python balogna.py tournament 10 p_robot p_human p_dummy
 '''
 
 import sys
@@ -25,36 +25,6 @@ from signal import (signal,
 
 signal(SIGPIPE, SIG_DFL)
 
-
-# the variation of liars dice (5 6-sided dies, ones not wild)
-#
-RULES_DICE          = 5
-RULES_FACES         = 6
-RULES_ONES_WILD     = 0
-
-STR_NUM_SINGULAR = {
-    1   : 'one',
-    2   : 'two',
-    3   : 'three',
-    4   : 'four',
-    5   : 'five',
-    6   : 'six',
-    7   : 'seven',
-    8   : 'eight',
-    9   : 'nine',
-}
-
-STR_NUM_PLURAL = {
-    1   : 'ones',
-    2   : 'twos',
-    3   : 'threes',
-    4   : 'fours',
-    5   : 'fives',
-    6   : 'sixes',
-    7   : 'sevens',
-    8   : 'eights',
-    9   : 'nines',
-}
 
 import random,logging,sys
 
@@ -260,56 +230,47 @@ def play_game(game_id,players,player_names,catch_exceptions) :
     logging.info('player %s-%s wins' % (winner,player_names[winner]))
     return winner
 
-def play_games(n,seed,playernames,catch_exceptions) :
+def play_games(n, seed, playernames, catch_exceptions):
     random.seed(seed)
     logging.debug('SEED\t%s' % seed)
     players = {}
     scores = {}
     names = {}
-    for i in playernames :
+    for i in playernames:
         playername, path, modulename, attr = split_playername(i)
-        logging.info('playername: %s => %s' % (i,split_playername(i)))
+        logging.info('playername: %s => %s' % (i, split_playername(i)))
         player_id = chr(ord('A') + len(players))
         names[player_id] = playername
-        logging.info('making player %s (%s) ...' % (player_id,playername))
+        logging.info('making player %s (%s) ...' % (player_id, playername))
         p = make_player(playername, path, modulename, attr, catch_exceptions)
         players[player_id] = p
         scores[player_id] = 0
     game_num = 0
-    for r in range(n) :
+    for r in range(n):
         game_num += 1
-        logging.debug('playing game %d ...' % (game_num,))
-        winner = liarsdice.play_game(game_num,players,names,catch_exceptions)
+        logging.debug('playing game %d ...' % (game_num, ))
+        winner = liarsdice.play_game(game_num, players, names, catch_exceptions)
         scores[winner] += 1
-        logging.debug('RESULT\tgame:%d\twinner:%s' % (game_num,winner))
+        logging.debug('RESULT\tgame:%d\twinner:%s' % (game_num, winner))
         k = scores.keys()
-        k.sort(key = lambda x : scores[x],reverse = True)
+        k.sort(key = lambda x: scores[x], reverse = True)
         rank = 0
-        for i in k :
+        for i in k:
             rank += 1
-            logging.info('SCORE\tgame %d of %d\t#%d.\t%s\t%s\t%d' % (game_num,n,rank,i,names[i],scores[i]))
+            logging.info('SCORE\tgame %d of %d\t#%d.\t%s\t%s\t%d' % (game_num, n, rank, i, names[i], scores[i]))
         logging.info('SCORE')
-        logging.info('STATUS\t%.2f\t\t%s' % (game_num/float(n),','.join(map(lambda i : '%s:%s' % (names[i],scores[i]),k))))
+        logging.info('STATUS\t%.2f\t\t%s' % (game_num/float(n), ','.join(map(lambda i : '%s:%s' % (names[i], scores[i]), k))))
     return scores
 
-def get_play(player, my_id, her_id, last):
-    x = None
-    try:
-        x = player.get_play(my_id, her_id, last)
-    except:
-        pass
-    if not x in (1, 2, 3):
-        x = random.choice((1, 2, 3))
-    return x
 
-def play_tournament(t, n, players) :
+def play_tournament(t, n, players):
     scores = {}
     for i in range(len(players)):
         scores[i] = 0
     for r in range(t) :
-        for i in range(len(players)) :
-            for j in range(len(players)) :
-                if i >= j :
+        for i in range(len(players)):
+            for j in range(len(players)):
+                if i >= j:
                     continue
                 x = play_game(n, players[i], players[j])
                 if 0 == x :

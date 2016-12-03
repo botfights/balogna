@@ -1,5 +1,5 @@
 #!/bin/bash
 
-# botfights.sh -- wrapper for botfights.io <=> liarsdice
+# botfights.sh -- wrapper for botfights.io <=> balogna
 
-python liarsdice.py tournament --log-level=10 $@
+python balogna.py tournament --log-level=10 $@
