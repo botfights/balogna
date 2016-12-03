@@ -1,10 +1,8 @@
-# bot.py -- sample balogna bot
+# bot.py -- sample balogna bot, just drops a random card
 
-# See README.md for instructions on how to
-# write a robot, or look at computer.py for
-# an example.
+import random
 
-def play(me, rank, players, history):
-    # TODO: write your player here
-    return None
+
+def play(me, hand, rank, players, history):
+    return random.choice(hand)
 
