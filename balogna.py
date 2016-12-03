@@ -1,16 +1,4 @@
-# balogna.py -- the balogna test harness
-
-HELP = '''\
-usage:
-
-    To play a game against the computer:
-
-        $ python balogna.py play p_human p_computer
-
-    To play a 10 game tourney between p_robot and p_computer and p_dummy:
-
-        $ python balogna.py tournament 10 p_robot p_human p_dummy
-'''
+# balogna.py -- the balogna botfights harness
 
 import sys
 import imp
@@ -19,24 +7,10 @@ import random
 import time
 
 # ignore SIG_PIPE
-from signal import (signal,
-                    SIGPIPE,
-                    SIG_DFL)
+from signal import (signal, SIGPIPE, SIG_DFL)
 
 signal(SIGPIPE, SIG_DFL)
 
-
-import random,logging,sys
-
-def verbose_play(play) :
-    if 0 :
-        pass
-    elif 0 == play :
-        return 'LIAR!'
-    elif 1 == (play // 10) :
-        return 'one %s' % STR_NUM_SINGULAR.get(play % 10,'???')
-    else :
-        return '%s %s' % (STR_NUM_SINGULAR.get(play // 10,'%d' % (play // 10)),STR_NUM_PLURAL.get(play % 10,'???'))
 
 def get_play(game_id,hand_num,who,f_get_play,player_name,hands_str,history_str,catch_exceptions) :
     play = 0
@@ -51,8 +25,9 @@ def get_play(game_id,hand_num,who,f_get_play,player_name,hands_str,history_str,c
     logging.debug('LOG_PLAY\tG%sH%d\t%s-%s\t%s\t%s\t%d' % (game_id,hand_num,who,player_name,hands_str,history_str,play))
     return play
 
-def play_game(game_id,players,player_names,catch_exceptions) :
-    
+
+def play_game(players):
+
     # first, set up the players left in the game
     #
     seats = players.keys()
@@ -230,50 +205,14 @@ def play_game(game_id,players,player_names,catch_exceptions) :
     logging.info('player %s-%s wins' % (winner,player_names[winner]))
     return winner
 
-def play_games(n, seed, playernames, catch_exceptions):
-    random.seed(seed)
-    logging.debug('SEED\t%s' % seed)
-    players = {}
-    scores = {}
-    names = {}
-    for i in playernames:
-        playername, path, modulename, attr = split_playername(i)
-        logging.info('playername: %s => %s' % (i, split_playername(i)))
-        player_id = chr(ord('A') + len(players))
-        names[player_id] = playername
-        logging.info('making player %s (%s) ...' % (player_id, playername))
-        p = make_player(playername, path, modulename, attr, catch_exceptions)
-        players[player_id] = p
-        scores[player_id] = 0
-    game_num = 0
-    for r in range(n):
-        game_num += 1
-        logging.debug('playing game %d ...' % (game_num, ))
-        winner = liarsdice.play_game(game_num, players, names, catch_exceptions)
-        scores[winner] += 1
-        logging.debug('RESULT\tgame:%d\twinner:%s' % (game_num, winner))
-        k = scores.keys()
-        k.sort(key = lambda x: scores[x], reverse = True)
-        rank = 0
-        for i in k:
-            rank += 1
-            logging.info('SCORE\tgame %d of %d\t#%d.\t%s\t%s\t%d' % (game_num, n, rank, i, names[i], scores[i]))
-        logging.info('SCORE')
-        logging.info('STATUS\t%.2f\t\t%s' % (game_num/float(n), ','.join(map(lambda i : '%s:%s' % (names[i], scores[i]), k))))
-    return scores
 
-
-def play_tournament(t, n, players):
+def play_tournament(games, players):
     scores = {}
     for i in range(len(players)):
         scores[i] = 0
-    for r in range(t) :
-        for i in range(len(players)):
-            for j in range(len(players)):
-                if i >= j:
-                    continue
-                x = play_game(n, players[i], players[j])
-                if 0 == x :
+    for r in range(games):
+        x = play_game(n, players[i], players[j])
+        if 0 == x :
                     scores[i] += 1
                 else :
                     scores[j] += 1
@@ -337,7 +276,7 @@ def make_player(player_id, dirname):
 
 def usage():
     print('''\
-liars dice -- see http://github.com/botfights/liarsdice for dox
+balogna -- see http://github.com/botfights/balogna for dox
 
 usage:
 
@@ -363,7 +302,8 @@ options:
 ''')
 
 
-def main(argv):
+if __name__ == '__main__':
+    argv = sys.argv[1:]
     if 1 > len(argv):
         usage()
         sys.exit()
@@ -407,27 +347,24 @@ def main(argv):
         pass
 
     elif 'game' == command:
-        logging.basicConfig(level=log_level, format='%(message)s', 
+        logging.basicConfig(level=log_level, format='%(message)s',
                         stream=sys.stdout)
-        player1 = make_player('a', args[0])
-        player2 = make_player('b', args[1])
-        winner = play_game(race_to, player1, player2)
+        players = []
+        for i in args:
+            players.append(make_player(chr(ord('A') + len(players)), i))
+        winner = play_game(players)
         sys.exit()
 
     elif 'tournament' == command:
         logging.basicConfig(level=log_level, format='%(message)s', 
                         stream=sys.stdout)
         players = []
-        for player_id, playername in enumerate(args):
-            players.append(make_player(chr(ord('a') + player_id), playername))
-        play_tournament(num_games, race_to, players)
+        for i in args:
+            players.append(make_player(chr(ord('a') + len(players)), i))
+        play_tournament(num_games, players)
         sys.exit()
 
     else:
         print 'i don\'t know how to "%s".' % command
         usage()
         sys.exit()
-
-
-if __name__ == '__main__':
-    main(sys.argv[1:])
