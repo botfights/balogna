@@ -3,6 +3,6 @@
 import random
 
 
-def play(me, hand, rank, players, history):
+def play(me, rank, hand, players, history):
     return random.choice(hand)
 
