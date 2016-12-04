@@ -58,7 +58,7 @@ def play_game(players):
         last_play_was_bullshit = False
         last_player = None
         pile = []
-        history = ''
+        history = []
         loser = None
         last_play_is_bullshit, play_is_bullshit = False, False
         while 1:
@@ -68,13 +68,14 @@ def play_game(players):
             p = players_in_hand[whosemove]
             players_hands = []
             for i in players_in_hand:
-                players_hands.append((i.player_id, len(i.hand)))
-            players_hands.append((None, len(pile)))
+                players_hands.append('%s:%d' % (i.player_id, len(i.hand)))
             myhand = p.hand[:]
             myhand.sort(key = lambda x: RANK_ORDER[x])
             myhand = ''.join(myhand)
-            logging.info('get_play(%s, %s, %s, %s, %s)' % (p.player_id, RANKS[on_rank], myhand, str(players_hands), str(history)))
-            play = p.get_play(p.player_id, RANKS[on_rank], myhand, players_hands, history)
+            history_str = ','.join(history)
+            players_hands_str = ','.join(players_hands)
+            logging.info('get_play(%s, %s, %s, %s, %s)' % (p.player_id, RANKS[on_rank], myhand, players_hands_str, history_str))
+            play = p.get_play(p.player_id, RANKS[on_rank], myhand, players_hands_str, history_str)
             if None == play:
                 play = ''
             play = str(play)
@@ -109,10 +110,12 @@ def play_game(players):
                     logging.info('previous play was bullshit, last player takes pile')
                     last_player.hand.extend(pile)
                     pile = []
+                    history.append('%s:BT' % p.player_id)
                 else:
                     logging.info('previous play wasn\'t bullshit, player takes pile')
                     players[whosemove].hand.extend(pile)
                     pile = []
+                    history.append('%s:BS' % p.player_id)
                 last_play_was_bullshit = False
 
             # otherwise, take the cards out of their hand
@@ -121,6 +124,7 @@ def play_game(players):
 
                 # remember if this is bullshit
                 #
+                history.append('%s:%d%s' % (p.player_id, len(i), RANKS[on_rank]))
                 last_player = players[whosemove]
                 last_play_was_bullshit = play_is_bullshit
                 for i in play:
