@@ -1,9 +1,9 @@
-Balogna
-=======
+Bullshit
+========
 
-This is a game to pit [Balogna][1] robots against each other.
+This is a game to pit [Bullshit][1] robots against each other.
 
-Balogna (or Bullshit or Cheat) is a card game played amongst two or 
+Bullshit (aka Cheat, "I Doubt It") is a card game played amongst two or 
 more players.
 
 In this variation there are no wild dice, and no re-casting of dice.

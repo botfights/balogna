@@ -1,4 +1,4 @@
-# balogna.py -- the balogna botfights harness
+# bullshit.py -- the bullshit botfights harness
 
 import sys
 import imp
@@ -236,11 +236,11 @@ def make_player(player_id, dirname):
 
 def usage():
     print('''\
-balogna -- see http://github.com/botfights/balogna for dox
+bullshit -- see http://github.com/botfights/bullshit for dox
 
 usage:
 
-    $ python balogna.py <command> [<option> ...] [<arg> ...]
+    $ python bullshit.py <command> [<option> ...] [<arg> ...]
 
 commands:
 
