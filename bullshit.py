@@ -14,7 +14,7 @@ signal(SIGPIPE, SIG_DFL)
 
 
 RANKS = 'A23456789TJQK'
-RANK_ORDER = {'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13}
+RANK_ORDER = {'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'Z': 14}
 
 
 def play_game(players):
@@ -34,8 +34,10 @@ def play_game(players):
         num_decks = 1
         deck = []
         for i in range(num_decks) * 4:
-            for rank in RANKS:
+            for rank in RANKS[:13]:
                 deck.append(rank)
+        deck.append('Z')
+        deck.append('Z')
         random.shuffle(deck)
 
         # deal cards
@@ -46,13 +48,10 @@ def play_game(players):
             player.hand = deck[i:i + cards_per_player]
             i += cards_per_player
 
-        # keep playing until one player left
+        # set up the hand
         #
         players_in_hand = players_in_game.values()
         random.shuffle(players_in_hand)
-
-        # start at 'A'
-        #
         on_rank = 0
         whosemove = 0
         last_play_was_bullshit = False
@@ -60,7 +59,7 @@ def play_game(players):
         pile = []
         history = []
         loser = None
-        last_play_is_bullshit, play_is_bullshit = False, False
+        last_play_was_out, last_play_is_bullshit, play_is_bullshit = False, False, False
         while 1:
 
             # get the play from current player
@@ -72,8 +71,6 @@ def play_game(players):
             myhand = p.hand[:]
             myhand.sort(key = lambda x: RANK_ORDER[x])
             myhand = ''.join(myhand)
-            if 100000 == len(history):
-                raise Exception('history too long')
             history_str = ','.join(history)
             players_hands_str = ','.join(players_hands)
             history_str = ','.join(history)[-10:]
@@ -81,7 +78,7 @@ def play_game(players):
             play = p.get_play(p.player_id, RANKS[on_rank], myhand, players_hands_str, history_str)
             if None == play:
                 play = ''
-            play = str(play)
+            play = str(play)[:4]
             logging.info('player %s (%s) played %s' % (p.player_id, p.playername, play))
 
             # is it legal? if not, just call bullshit
@@ -102,13 +99,25 @@ def play_game(players):
             for rank, count in play_counts.items():
                 if hand_counts.get(rank, 0) < count:
                     called_bullshit = True
-                if rank != RANKS[on_rank]:
+                if rank != RANKS[on_rank] and rank != 'Z':
                     play_is_bullshit = True
+
+            # did the last player go out? automatically call bs
+            #
+            if last_play_was_out:
+                logging.info('last play was out, calling bullshit')
+                called_bullshit = True
 
             # bullshit call? let's check
             #
             if called_bullshit:
                 logging.info('player called bullshit')
+
+                # take random card out of the pile
+                #
+                if 1 < len(pile):
+                    pivot = random.randint(0, len(pile) - 1)
+                    pile = pile[:pivot] + pile[pivot+1:]
                 if last_play_was_bullshit:
                     logging.info('previous play was bullshit, last player takes pile')
                     last_player.hand.extend(pile)
@@ -120,16 +129,23 @@ def play_game(players):
                     pile = []
                     history.append('%s:0V' % p.player_id)
                 last_play_was_bullshit = False
+                last_play_was_out = False
 
             # otherwise, take the cards out of their hand
             #
             else:
 
+                history.append('%s:%d%s' % (p.player_id, len(i), RANKS[on_rank]))
                 # remember if this is bullshit
                 #
-                history.append('%s:%d%s' % (p.player_id, len(i), RANKS[on_rank]))
                 last_player = players_in_hand[whosemove]
                 last_play_was_bullshit = play_is_bullshit
+
+                # remember if they're going out
+                #
+                last_play_was_out = False
+                if len(play) == len(p.hand):
+                    last_play_was_out = True
                 for i in play:
                     pile.append(i)
                 p.hand = []
