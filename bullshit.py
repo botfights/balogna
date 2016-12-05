@@ -31,7 +31,7 @@ def play_game(players):
 
         # build and shuffle the decks
         #
-        num_decks = (len(players_in_game) // 4) + 1
+        num_decks = 1
         deck = []
         for i in range(num_decks) * 4:
             for rank in RANKS:
@@ -72,9 +72,12 @@ def play_game(players):
             myhand = p.hand[:]
             myhand.sort(key = lambda x: RANK_ORDER[x])
             myhand = ''.join(myhand)
+            if 100000 == len(history):
+                raise Exception('history too long')
             history_str = ','.join(history)
             players_hands_str = ','.join(players_hands)
-            logging.info('get_play(%s, %s, %s, %s, %s)' % (p.player_id, RANKS[on_rank], myhand, players_hands_str, history_str))
+            history_str = ','.join(history)[-10:]
+            logging.info('get_play("%s", "%s", "%s", "%s", "%s")' % (p.player_id, RANKS[on_rank], myhand, players_hands_str, history_str))
             play = p.get_play(p.player_id, RANKS[on_rank], myhand, players_hands_str, history_str)
             if None == play:
                 play = ''
@@ -110,12 +113,12 @@ def play_game(players):
                     logging.info('previous play was bullshit, last player takes pile')
                     last_player.hand.extend(pile)
                     pile = []
-                    history.append('%s:BT' % p.player_id)
+                    history.append('%s:0B' % p.player_id)
                 else:
                     logging.info('previous play wasn\'t bullshit, player takes pile')
-                    players[whosemove].hand.extend(pile)
+                    players_in_hand[whosemove].hand.extend(pile)
                     pile = []
-                    history.append('%s:BS' % p.player_id)
+                    history.append('%s:0V' % p.player_id)
                 last_play_was_bullshit = False
 
             # otherwise, take the cards out of their hand
@@ -125,7 +128,7 @@ def play_game(players):
                 # remember if this is bullshit
                 #
                 history.append('%s:%d%s' % (p.player_id, len(i), RANKS[on_rank]))
-                last_player = players[whosemove]
+                last_player = players_in_hand[whosemove]
                 last_play_was_bullshit = play_is_bullshit
                 for i in play:
                     pile.append(i)
@@ -139,16 +142,17 @@ def play_game(players):
             on_rank = (on_rank + 1) % 13
 
             # advance whosemove
+            #
             last_whosemove = whosemove
             while 1:
                 whosemove = (whosemove + 1) % len(players_in_hand)
-                if 0 != len(players[whosemove].hand):
+                if (whosemove == last_whosemove) or (0 != len(players_in_hand[whosemove].hand)):
                     break
 
             # if only one player has any cards left, they lost
             #
             if whosemove == last_whosemove:
-                loser = players[whosemove]
+                loser = players_in_hand[whosemove]
                 logging.info('end of hand, player %s (%s) lost' % (loser.player_id, loser.playername))
                 break
 
