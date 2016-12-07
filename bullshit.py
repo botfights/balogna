@@ -14,7 +14,7 @@ signal(SIGPIPE, SIG_DFL)
 
 
 RANKS = 'A23456789TJQK'
-RANK_ORDER = {'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13, 'Z': 14}
+RANK_ORDER = {'A': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'T': 10, 'J': 11, 'Q': 12, 'K': 13}
 
 
 def play_game(players):
@@ -36,8 +36,6 @@ def play_game(players):
         for i in range(num_decks) * 4:
             for rank in RANKS[:13]:
                 deck.append(rank)
-        deck.append('Z')
-        deck.append('Z')
         random.shuffle(deck)
 
         # deal cards
@@ -99,7 +97,7 @@ def play_game(players):
             for rank, count in play_counts.items():
                 if hand_counts.get(rank, 0) < count:
                     called_bullshit = True
-                if rank != RANKS[on_rank] and rank != 'Z':
+                if rank != RANKS[on_rank]:
                     play_is_bullshit = True
 
             # did the last player go out? automatically call bs
