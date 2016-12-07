@@ -58,6 +58,7 @@ def play_game(players):
         history = []
         loser = None
         last_play_was_out, last_play_is_bullshit, play_is_bullshit = False, False, False
+        rounds = 0
         while 1:
 
             # get the play from current player
@@ -71,7 +72,7 @@ def play_game(players):
             myhand = ''.join(myhand)
             history_str = ','.join(history)
             players_hands_str = ','.join(players_hands)
-            history_str = ','.join(history)[-10:]
+            history_str = ','.join(history)
             logging.info('get_play("%s", "%s", "%s", "%s", "%s")' % (p.player_id, RANKS[on_rank], myhand, players_hands_str, history_str))
             play = p.get_play(p.player_id, RANKS[on_rank], myhand, players_hands_str, history_str)
             if None == play:
@@ -108,19 +109,15 @@ def play_game(players):
 
             # bullshit call? let's check
             #
+            advance_whosemove = True
             if called_bullshit:
                 logging.info('player called bullshit')
-
-                # take random card out of the pile
-                #
-                if 1 < len(pile):
-                    pivot = random.randint(0, len(pile) - 1)
-                    pile = pile[:pivot] + pile[pivot+1:]
                 if last_play_was_bullshit:
                     logging.info('previous play was bullshit, last player takes pile')
                     last_player.hand.extend(pile)
                     pile = []
                     history.append('%s:0B' % p.player_id)
+                    advance_whosemove = False
                 else:
                     logging.info('previous play wasn\'t bullshit, player takes pile')
                     players_in_hand[whosemove].hand.extend(pile)
@@ -157,11 +154,29 @@ def play_game(players):
 
             # advance whosemove
             #
-            last_whosemove = whosemove
-            while 1:
-                whosemove = (whosemove + 1) % len(players_in_hand)
-                if (whosemove == last_whosemove) or (0 != len(players_in_hand[whosemove].hand)):
-                    break
+            if advance_whosemove:
+                last_whosemove = whosemove
+                while 1:
+                    whosemove += 1
+                    if whosemove == len(players_in_hand):
+                        rounds += 1
+                        whosemove = 0
+                    if (whosemove == last_whosemove) or (0 != len(players_in_hand[whosemove].hand)):
+                        break
+
+            # too many rounds?
+            #
+            if rounds == (2 * 13 * len(players_in_hand)):
+                most = [0, []]
+                for i in players_in_hand:
+                    if len(i.hand) == most[0]:
+                        most[1].append(i)
+                    elif len(i.hand) > most[0]:
+                        most = [len(i.hand), [i, ]]
+                logging.info('too many rounds, found %d players with %d cards, picking random one' % (len(most[1]), most[0]))
+                loser = random.choice(most[1])
+                logging.info('end of hand (rounds), player %s (%s) lost' % (loser.player_id, loser.playername))
+                break
 
             # if only one player has any cards left, they lost
             #
